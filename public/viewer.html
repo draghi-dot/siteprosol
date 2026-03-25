@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>Prosol PDF Viewer</title>
+
+    <!-- PDF.js core -->
+    <script src="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+
+    <!-- PDF.js viewer CSS and JS for the UI and Link service -->
+    <link rel="stylesheet" href="https://unpkg.com/pdfjs-dist@3.11.174/web/pdf_viewer.css">
+    <script src="https://unpkg.com/pdfjs-dist@3.11.174/web/pdf_viewer.js"></script>
+
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #333;
+            overflow: hidden;
+            /* scrolling happens inside viewerContainer */
+        }
+
+        #viewerContainer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            overflow: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* The actual viewer that pdf_viewer sets up */
+        .pdfViewer {
+            padding-bottom: 100px;
+            /* Space for the back button */
+        }
+
+        /* Back Button Image */
+        #buttonImage {
+            cursor: pointer;
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 20px;
+            z-index: 10;
+            display: block;
+        }
+
+        #buttonImage img {
+            max-width: 200px;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 768px) {
+            #buttonImage img {
+                max-width: 120px;
+            }
+
+            #buttonImage {
+                bottom: 20px;
+            }
+
+            /* Ensure the pdf is wide enough on mobile */
+            .page {
+                margin: 5px auto !important;
+            }
+        }
+
+        #loader {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-family: Arial, sans-serif;
+            font-size: 1.2rem;
+            z-index: 5;
+        }
+    </style>
+</head>
+
+<body>
+    <a href="index.html" id="buttonImage">
+        <img src="images/btncover.png" alt="Back to Cover">
+    </a>
+
+    <div id="loader">Loading PDF... Please wait.</div>
+
+    <div id="viewerContainer">
+        <div id="viewer" class="pdfViewer"></div>
+    </div>
+
+    <!-- Fallback iframe just in case for local filesystem testing -->
+    <iframe id="fallback-frame" src=""
+        style="display:none; width:100%; height:100%; border:none; position:absolute; top:0; left:0; padding-bottom:100px; box-sizing:border-box; z-index: 2;"></iframe>
+
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+
+        const urlParams = new URLSearchParams(window.location.search);
+        let pdfFile = urlParams.get('file');
+        const backUrl = urlParams.get('back') || 'index.html';
+        document.getElementById('buttonImage').href = backUrl;
+
+        const loader = document.getElementById('loader');
+        const fallbackFrame = document.getElementById('fallback-frame');
+        const viewerContainer = document.getElementById('viewerContainer');
+
+        if (pdfFile) {
+            const rawPath = decodeURIComponent(pdfFile);
+            const fetchUrl = new URL(encodeURI(rawPath), window.location.href).href;
+
+            if (window.location.protocol === 'file:') {
+                // Local testing CORS fallback
+                viewerContainer.style.display = 'none';
+                loader.style.display = 'none';
+                fallbackFrame.src = rawPath;
+                fallbackFrame.style.display = 'block';
+            } else {
+                // Initialize the official PDFViewer UI
+                const eventBus = new pdfjsViewer.EventBus();
+
+                // Enable links
+                const pdfLinkService = new pdfjsViewer.PDFLinkService({
+                    eventBus: eventBus
+                });
+
+                const pdfViewer = new pdfjsViewer.PDFViewer({
+                    container: viewerContainer,
+                    eventBus: eventBus,
+                    linkService: pdfLinkService,
+                    annotationMode: pdfjsLib.AnnotationMode.ENABLE_FORMS, // Allows interactive links
+                    textLayerMode: 1, // ENABLE text selection
+                    removePageBorders: false
+                });
+
+                pdfLinkService.setViewer(pdfViewer);
+
+                // Load document
+                const loadingTask = pdfjsLib.getDocument({ url: fetchUrl });
+                loadingTask.promise.then(function (pdfDocument) {
+                    loader.style.display = 'none';
+                    pdfViewer.setDocument(pdfDocument);
+                    pdfLinkService.setDocument(pdfDocument, null);
+
+                    // Force width to fit on mobile
+                    eventBus.on('pagesinit', function () {
+                        // Use 'auto' or 'page-fit' so it doesn't artificially zoom in past the screen bounds
+                        pdfViewer.currentScaleValue = 'auto';
+                    });
+                }).catch(function (reason) {
+                    console.error('PDF.js Error:', reason);
+                    viewerContainer.style.display = 'none';
+                    loader.style.display = 'none';
+                    fallbackFrame.src = rawPath;
+                    fallbackFrame.style.display = 'block';
+                });
+            }
+        } else {
+            loader.innerText = 'No PDF specified.';
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tarkett - English</title>
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #ffffff;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            position: relative;
+            max-width: 1080px;
+            /* Matching the image width */
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container img {
+            max-width: 100%;
+            height: auto;
+            max-height: 100vh;
+            display: block;
+            object-fit: contain;
+        }
+
+        /* The buttons positioned over the text */
+        .overlay-btn {
+            position: absolute;
+            cursor: pointer;
+            text-decoration: none;
+            /* 
+               We make it transparent by default. 
+               Adding a slight background on hover makes it feel interactive. 
+            */
+            background-color: transparent;
+            border-radius: 12px;
+            transition: background-color 0.3s;
+        }
+
+        .overlay-btn:hover {
+            background-color: rgba(211, 47, 47, 0.1);
+            /* Subtle red tint on hover */
+        }
+
+        /* Precise locations for texts based on OCR coordinates */
+        #btn-stairwell {
+            top: 72.3%;
+            left: 50.5%;
+            width: 41.5%;
+            height: 2%;
+            z-index: 5;
+        }
+
+        #btn-accessories {
+            top: 74.5%;
+            left: 55%;
+            width: 35%;
+            height: 2%;
+            z-index: 5;
+        }
+
+        /* Back Button Image */
+        #buttonImage {
+            cursor: pointer;
+            position: fixed;
+            margin-left: 2px;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 20px;
+            z-index: 10;
+        }
+    </style>
+</head>
+
+<body>
+    <a href="index.html" id="buttonImage">
+        <img src="images/btncover.png" alt="Button Image">
+    </a>
+    <div class="container">
+        <!-- The Selection Image -->
+        <img src="EN/00-EN-SELECTIE.jpg" alt="Tarkett Selection">
+
+        <!-- Invisible clickable areas over the specific texts -->
+        <a id="btn-stairwell" class="overlay-btn"
+            href="viewer.html?file=EN/01%20-%20Stairwell%20Management-EN.pdf&amp;back=tarket-en.html"
+            title="Stairwell Management"></a>
+        <a id="btn-accessories" class="overlay-btn"
+            href="viewer.html?file=EN/02-Accesories-CAT-EN.pdf&amp;back=tarket-en.html" title="Accessories"></a>
+    </div>
+</body>
+
+</html>
